@@ -8,7 +8,7 @@ enum GameState
 
 class Game
 {
-    public int size; //размер игрового поля
+    public int size;
     public Player cat;
     public Player mouse;
     public GameState state;
@@ -17,8 +17,7 @@ class Game
 
     public Game(int size)
     {
-        this.size = size; //задаем размер игрового поля
-        //создаем игроков
+        this.size = size;
         cat = new Player("Cat");
         mouse = new Player("Mouse");
         state = GameState.Start;
@@ -26,12 +25,8 @@ class Game
 
     public void Run()
     {
-        while (state != GameState.End) //пока не конец игры
+        while (state != GameState.End)
         {
-            //прочитать команду
-            //если все команды исчерпаны, закончить игру (state = GameState.End;)
-            //выполнить команду DoMoveCommand или DoPrintCommand
-            //если мышь поймана, закончить игру (state = GameState.End;)
         }
     }
 
@@ -39,19 +34,47 @@ class Game
     {
         switch (command)
         {
-            case 'M': mouse.Move(steps); break;
-            case 'C': cat.Move(steps); break;
+            case 'M': mouse.Move(steps, size); break;
+            case 'C': cat.Move(steps, size); break;
         }
-    }
-
-    private void DoPrintCommand()
-    {
-        //вывод позиций игроков и расстояния между ними (если это возможно)
     }
 
     private int GetDistance()
     {
-        //найти расстояние между игроками cat.location - mouse.location
-        return 0;
+        if (cat.state == State.NotInGame || mouse.state == State.NotInGame)
+            return -1;
+
+        int pos = cat.location;
+        int dist = 0;
+
+        while (pos != mouse.location)
+        {
+            pos++;
+            if (pos > size) pos = 1;
+            dist++;
+        }
+
+        if (dist > size / 2)
+        {
+            dist = size - dist;
+        }
+
+        return dist;
+    }
+
+    private void DoPrintCommand(StreamWriter writer)
+    {
+        string catStr = cat.state == State.NotInGame ? "??" : cat.location.ToString();
+        string mouseStr = mouse.state == State.NotInGame ? "??" : mouse.location.ToString();
+
+        if (cat.state == State.NotInGame || mouse.state == State.NotInGame)
+        {
+            writer.WriteLine($"{catStr,3}    {mouseStr,3}");
+        }
+        else
+        {
+            int dist = GetDistance();
+            writer.WriteLine($"{catStr,3}   {mouseStr,3}        {dist,2}");
+        }
     }
 }
