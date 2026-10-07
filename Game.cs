@@ -25,11 +25,73 @@ class Game
 
     public void Run()
     {
-        while (state != GameState.End)
-        {
-        }
-    }
+        if (!File.Exists(InputFile)) return;
 
+        string[] lines = File.ReadAllLines(InputFile);
+        if (lines.Length == 0) return;
+
+        if (int.TryParse(lines[0].Trim(), out int parsedSize) && parsedSize > 0)
+        {
+            size = parsedSize;
+        }
+
+        using (StreamWriter writer = new StreamWriter(OutFile))
+        {
+            writer.WriteLine("Cat and Mouse");
+            writer.WriteLine();
+            writer.WriteLine("Cat  Mouse  Distance");
+            writer.WriteLine("-------------------");
+
+            int i = 1;
+            while (state != GameState.End && i < lines.Length)
+            {
+                string line = lines[i].Trim();
+                i++;
+
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                char command = parts[0][0];
+
+                if (command == 'P')
+                {
+                    DoPrintCommand(writer);
+                }
+                else if (command == 'M' || command == 'C')
+                {
+                    if (parts.Length > 1 && int.TryParse(parts[1], out int steps))
+                    {
+                        DoMoveCommand(command, steps);
+
+                        if (cat.state == State.Playing && mouse.state == State.Playing && cat.location == mouse.location)
+                        {
+                            cat.state = State.Winner;
+                            mouse.state = State.Looser;
+                            state = GameState.End; 
+                        }
+                    }
+                }
+            }
+
+            writer.WriteLine("-------------------");
+            writer.WriteLine();
+            writer.WriteLine();
+            writer.WriteLine("Distance traveled:   Mouse    Cat");
+            writer.WriteLine($"                       {mouse.distanceTraveled,2}     {cat.distanceTraveled,2}");
+            writer.WriteLine();
+
+            if (mouse.state == State.Looser)
+            {
+                writer.WriteLine($"Mouse caught at: {cat.location,2}");
+            }
+            else
+            {
+                writer.WriteLine("Mouse evaded Cat");
+            }
+        }
+
+        state = GameState.End;
+    }
     private void DoMoveCommand(char command, int steps)
     {
         switch (command)
